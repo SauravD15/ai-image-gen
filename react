@@ -1,0 +1,91 @@
+import { useState } from "react";
+import { Input } from "@/components/ui/input";
+import { Button } from "@/components/ui/button";
+import { Card, CardContent } from "@/components/ui/card";
+import { Sun, Moon, User, Bot, History } from "lucide-react";
+import { motion } from "framer-motion";
+
+export default function AIStudyHelper() {
+  const [darkMode, setDarkMode] = useState(false);
+  const [input, setInput] = useState("");
+  const [format, setFormat] = useState("roadmap");
+  const [history, setHistory] = useState([]);
+  const [loading, setLoading] = useState(false);
+  const [collapsed, setCollapsed] = useState(true);
+
+  const handleSubmit = async () => {
+    if (!input) return;
+    setLoading(true);
+    const userMessage = { role: "user", content: `Topic: ${input} (Format: ${format})` };
+    setHistory((prev) => [...prev, userMessage]);
+    setInput("");
+    
+    // Simulating AI Response
+    setTimeout(() => {
+      const aiResponse = {
+        role: "ai",
+        content: `Generated a ${format} for: "${input}"`,
+      };
+      setHistory((prev) => [...prev, aiResponse]);
+      setLoading(false);
+    }, 1500);
+  };
+
+  return (
+    <div className={`min-h-screen p-4 transition-colors ${darkMode ? "bg-gray-900 text-white" : "bg-gray-100 text-black"}`}>
+      <div className="flex justify-between items-center mb-4">
+        <h1 className="text-2xl font-bold">AI Study Helper</h1>
+        <div className="flex items-center gap-4">
+          <Button onClick={() => setCollapsed(!collapsed)}>
+            <History />
+          </Button>
+          <Button onClick={() => setDarkMode(!darkMode)}>
+            {darkMode ? <Sun /> : <Moon />}
+          </Button>
+        </div>
+      </div>
+      
+      <div className="flex gap-4">
+        {!collapsed && (
+          <motion.div initial={{ width: 0, opacity: 0 }} animate={{ width: "20%", opacity: 1 }} exit={{ width: 0, opacity: 0 }} className="bg-gray-200 p-2 rounded-lg overflow-hidden">
+            <h2 className="text-lg font-semibold mb-2">History</h2>
+            <div className="space-y-2">
+              {history.map((item, index) => (
+                <div key={index} className="p-2 text-sm border-b border-gray-300">
+                  {item.role === "user" ? <User className="inline-block mr-2" /> : <Bot className="inline-block mr-2" />}
+                  {item.content}
+                </div>
+              ))}
+            </div>
+          </motion.div>
+        )}
+        
+        <div className="flex flex-col w-full items-center">
+          <div className="w-full max-w-2xl space-y-4 mb-4 p-4 border rounded-lg bg-white shadow">
+            {history.map((message, index) => (
+              <motion.div key={index} initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.3 }}>
+                <Card className={`p-3 ${message.role === "user" ? "bg-blue-100" : "bg-green-100"}`}>
+                  <CardContent className="flex items-center gap-2">
+                    {message.role === "user" ? <User className="text-blue-600" /> : <Bot className="text-green-600" />}
+                    {message.content}
+                  </CardContent>
+                </Card>
+              </motion.div>
+            ))}
+            {loading && <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ repeat: Infinity, duration: 0.5 }}>Generating...</motion.div>}
+          </div>
+          
+          <div className="flex w-full max-w-2xl gap-2">
+            <Input placeholder="Enter a topic..." value={input} onChange={(e) => setInput(e.target.value)} />
+            <select className="border rounded px-2" value={format} onChange={(e) => setFormat(e.target.value)}>
+              <option value="roadmap">Roadmap</option>
+              <option value="mindmap">Mind Map</option>
+              <option value="infographic">Infographic</option>
+            </select>
+            <Button onClick={handleSubmit} disabled={loading}>Generate</Button>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+}
